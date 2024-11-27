@@ -1,4 +1,15 @@
 import streamlit as st
+import pandas as pd
+import duckdb
+
+data = {"a": [1, 2, 3], "b": [4, 5, 6]}
+df = pd.DataFrame(data)
 
 st.write("Hello, world!")
 st.header("This is a header")
+input_text = st.text_area("Please enter your sql")
+st.dataframe(df)
+
+st.write("resultat")
+duckres = duckdb.query(input_text)
+st.dataframe(duckres)
