@@ -1,7 +1,8 @@
-import pandas as pd
-import duckdb
-import streamlit as st
 import io
+import pdb
+import duckdb
+import pandas as pd
+import streamlit as st
 
 csv = """
 beverage,price
@@ -19,12 +20,12 @@ muffin,3
 """
 food_items = pd.read_csv(io.StringIO(csv2))
 
-answer = """
+answer_string = """
 SELECT * FROM beverages
 CROSS JOIN food_items
 """
 
-solution = duckdb.sql(answer).df()
+solution_df = duckdb.sql(answer_string).df()
 
 
 with st.sidebar:
@@ -41,9 +42,17 @@ st.header("enter your code:")
 query = st.text_area(label="votre code SQL ici", key="user_input")
 if query:
     result = duckdb.sql(query).df()
+    try:
+        result = result[solution_df.columns]
+        st.dataframe(result.compare(solution_df))
+
+    except:
+        st.write("some columns are missing")
+
     st.dataframe(result)
 
-tab2, tab3 = st.tabs(["Tables", "Solution"])
+
+tab2, tab3 = st.tabs(["Tables", "solution_df"])
 
 with tab2:
     st.write("table: beverages")
@@ -51,7 +60,7 @@ with tab2:
     st.write("table: food_items")
     st.dataframe(food_items)
     st.write("expected:")
-    st.dataframe(solution)
+    st.dataframe(solution_df)
 
 with tab3:
-    st.write(answer)
+    st.write(answer_string)
