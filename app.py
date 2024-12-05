@@ -22,21 +22,28 @@ with st.sidebar:
         placeholder="Select a theme...",
     )
     st.write("You selected:", theme)
+    if theme:
+        exercise = con.execute(
+            f"SELECT * FROM memory_state WHERE theme = '{theme}'"
+        ).df()
+        st.write(exercise)
 
-    exercise = con.execute(f"SELECT * FROM memory_state WHERE theme = '{theme}'").df()
-    st.write(exercise)
+        exercise_name = exercise.loc[0, "exercise_name"]
+        with open(f"answers/{exercise_name}.sql") as f:
+            answer = f.read()
+        solution_df = con.execute(answer).df()
 
 st.header("enter your code:")
 query = st.text_area(label="votre code SQL ici", key="user_input")
 if query:
     result = con.execute(query).df()
 
-    #     try:
-    #         result = result[solution_df.columns]
-    #         st.dataframe(result.compare(solution_df))
+    try:
+        result = result[solution_df.columns]
+        st.dataframe(result.compare(solution_df))
 
-    #     except:
-    #         st.write("some columns are missing")
+    except:
+        st.write("some columns are missing")
 
     st.dataframe(result)
 
@@ -44,27 +51,19 @@ if query:
 tab2, tab3 = st.tabs(["Tables", "solution_df"])
 
 with tab2:
-    exercise_tables = exercise.loc[
-        0, "tables"
-    ]  # en fait on obtient une str au lieu d'une liste, on va lui demander de le lire "literally"
-    exercise_tables = ast.literal_eval(exercise_tables)
+    if theme:
+        exercise_tables = exercise.loc[
+            0, "tables"
+        ]  # en fait on obtient une str au lieu d'une liste, on va lui demander de le lire "literally"
+        exercise_tables = ast.literal_eval(exercise_tables)
 
-    for table in exercise_tables:
-        st.write(f"table: {table}")
-        table_df = con.execute(f"SELECT * FROM {table}").df()
-        st.dataframe(table_df)
-
-#     st.write("table: beverages")
-#     st.dataframe(beverages)
-#     st.write("table: food_items")
-#     st.dataframe(food_items)
-#     st.write("expected:")
-#     st.dataframe(solution_df)
+        for table in exercise_tables:
+            st.write(f"table: {table}")
+            table_df = con.execute(f"SELECT * FROM {table}").df()
+            st.dataframe(table_df)
 
 with tab3:
-    exercise_name = exercise.loc[0, "exercise_name"]
-    with open(f"answers/{exercise_name}.sql") as f:
-        answer = f.read()
-    st.write(answer)
+    if theme:
+        st.write(answer)
 
 con.close()
