@@ -28,16 +28,17 @@ with st.sidebar:
 
 st.header("enter your code:")
 query = st.text_area(label="votre code SQL ici", key="user_input")
-# if query:
-#     result = duckdb.sql(query).df()
-#     try:
-#         result = result[solution_df.columns]
-#         st.dataframe(result.compare(solution_df))
+if query:
+    result = con.execute(query).df()
 
-#     except:
-#         st.write("some columns are missing")
+    #     try:
+    #         result = result[solution_df.columns]
+    #         st.dataframe(result.compare(solution_df))
 
-#     st.dataframe(result)
+    #     except:
+    #         st.write("some columns are missing")
+
+    st.dataframe(result)
 
 
 tab2, tab3 = st.tabs(["Tables", "solution_df"])
@@ -60,5 +61,10 @@ with tab2:
 #     st.write("expected:")
 #     st.dataframe(solution_df)
 
-# with tab3:
-#     st.write(answer_string)
+with tab3:
+    exercise_name = exercise.loc[0, "exercise_name"]
+    with open(f"answers/{exercise_name}.sql") as f:
+        answer = f.read()
+    st.write(answer)
+
+con.close()
