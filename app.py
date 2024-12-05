@@ -1,4 +1,5 @@
 import pdb
+import ast
 import duckdb
 import streamlit as st
 
@@ -39,9 +40,19 @@ query = st.text_area(label="votre code SQL ici", key="user_input")
 #     st.dataframe(result)
 
 
-# tab2, tab3 = st.tabs(["Tables", "solution_df"])
+tab2, tab3 = st.tabs(["Tables", "solution_df"])
 
-# with tab2:
+with tab2:
+    exercise_tables = exercise.loc[
+        0, "tables"
+    ]  # en fait on obtient une str au lieu d'une liste, on va lui demander de le lire "literally"
+    exercise_tables = ast.literal_eval(exercise_tables)
+
+    for table in exercise_tables:
+        st.write(f"table: {table}")
+        table_df = con.execute(f"SELECT * FROM {table}").df()
+        st.dataframe(table_df)
+
 #     st.write("table: beverages")
 #     st.dataframe(beverages)
 #     st.write("table: food_items")
