@@ -23,9 +23,12 @@ with st.sidebar:
     )
     st.write("You selected:", theme)
     if theme:
-        exercise = con.execute(
-            f"SELECT * FROM memory_state WHERE theme = '{theme}'"
-        ).df()
+        exercise = (
+            con.execute(f"SELECT * FROM memory_state WHERE theme = '{theme}'")
+            .df()
+            .sort_values("last_reviewed", ascending=False)
+            .reset_index(drop=True)
+        )
         st.write(exercise)
 
         exercise_name = exercise.loc[0, "exercise_name"]
@@ -55,7 +58,7 @@ with tab2:
         exercise_tables = exercise.loc[
             0, "tables"
         ]  # en fait on obtient une str au lieu d'une liste, on va lui demander de le lire "literally"
-        exercise_tables = ast.literal_eval(exercise_tables)
+        # exercise_tables = ast.literal_eval(exercise_tables)
 
         for table in exercise_tables:
             st.write(f"table: {table}")
