@@ -1,47 +1,46 @@
-import io
 import pdb
+import ast
 import duckdb
-import pandas as pd
 import streamlit as st
 
-csv = """
-beverage,price
-orange juice,2.5
-Expresso,2
-Tea,3
-"""
-beverages = pd.read_csv(io.StringIO(csv))
+con = duckdb.connect(database="data/exercices_sql_tables.duckdb", read_only=False)
 
-csv2 = """
-food_item,food_price
-cookie juice,2.5
-chocolatine,2
-muffin,3
-"""
-food_items = pd.read_csv(io.StringIO(csv2))
 
-answer_string = """
-SELECT * FROM beverages
-CROSS JOIN food_items
-"""
+# answer_string = """
+# SELECT * FROM beverages
+# CROSS JOIN food_items
+# """
 
-solution_df = duckdb.sql(answer_string).df()
+# solution_df = duckdb.sql(answer_string).df()
 
 
 with st.sidebar:
-    option = st.selectbox(
+    theme = st.selectbox(
         "What would you like to review?",
-        ("Joins", "GroupBy", "Windows Functions"),
+        ("cross_joins", "GroupBy", "windows_functions"),
         index=None,
         placeholder="Select a theme...",
     )
-    st.write("You selected:", option)
+    st.write("You selected:", theme)
+    if theme:
+        exercise = (
+            con.execute(f"SELECT * FROM memory_state WHERE theme = '{theme}'")
+            .df()
+            .sort_values("last_reviewed", ascending=False)
+            .reset_index(drop=True)
+        )
+        st.write(exercise)
 
+        exercise_name = exercise.loc[0, "exercise_name"]
+        with open(f"answers/{exercise_name}.sql") as f:
+            answer = f.read()
+        solution_df = con.execute(answer).df()
 
 st.header("enter your code:")
 query = st.text_area(label="votre code SQL ici", key="user_input")
 if query:
-    result = duckdb.sql(query).df()
+    result = con.execute(query).df()
+
     try:
         result = result[solution_df.columns]
         st.dataframe(result.compare(solution_df))
@@ -55,12 +54,19 @@ if query:
 tab2, tab3 = st.tabs(["Tables", "solution_df"])
 
 with tab2:
-    st.write("table: beverages")
-    st.dataframe(beverages)
-    st.write("table: food_items")
-    st.dataframe(food_items)
-    st.write("expected:")
-    st.dataframe(solution_df)
+    if theme:
+        exercise_tables = exercise.loc[
+            0, "tables"
+        ]  # en fait on obtient une str au lieu d'une liste, on va lui demander de le lire "literally"
+        # exercise_tables = ast.literal_eval(exercise_tables)
+
+        for table in exercise_tables:
+            st.write(f"table: {table}")
+            table_df = con.execute(f"SELECT * FROM {table}").df()
+            st.dataframe(table_df)
 
 with tab3:
-    st.write(answer_string)
+    if theme:
+        st.write(answer)
+
+con.close()
